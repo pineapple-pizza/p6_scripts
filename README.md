@@ -4,10 +4,10 @@
 - install dependencies ```pip3 install requirements.txt```
 
 ## make a .env file
-DB_HOST=localhost
-DB_USER=***
-DB_PASSWORD=***
-DB_NAME=dbname
+- DB_HOST=localhost
+- DB_USER=***
+- DB_PASSWORD=***
+- DB_NAME=dbname
 
 ## project steps
 1. ```python db_script.py``` to create db
