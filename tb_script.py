@@ -15,14 +15,11 @@ def create_tables():
 		""",
             """ CREATE TABLE "address" (
 				address_id SERIAL PRIMARY KEY,
-                user_id INTEGER,
                 street VARCHAR(255),
                 city VARCHAR(255),
                 zip_code VARCHAR(255),
                 country VARCHAR(255),
-                CONSTRAINT user_id FOREIGN KEY (address_id)
-					REFERENCES "user" (user_id)
-					ON UPDATE NO ACTION ON DELETE NO ACTION)
+                user_id INTEGER REFERENCES "user" (user_id) ON DELETE CASCADE)
 		""",
         """
             CREATE TABLE "pizzeria" (
@@ -34,12 +31,7 @@ def create_tables():
         """
             CREATE TABLE "ingredients_list" (
                 ing_id SERIAL PRIMARY KEY,
-                name VARCHAR(255),
-                ing_stock VARCHAR(255),
-                pizzeria_id INTEGER,
-                CONSTRAINT pizzeria_id FOREIGN KEY (ing_id)
-                    REFERENCES "pizzeria" (pizzeria_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION)
+                name VARCHAR(255))
 		""",
         """
             CREATE TABLE "pizzeria_catalog" (
@@ -49,78 +41,25 @@ def create_tables():
                 image VARCHAR(255),
                 price VARCHAR(255),
                 availability VARCHAR(255),
-                ingredients INTEGER,
-                CONSTRAINT ingredients FOREIGN KEY (product_id)
-                    REFERENCES "ingredients_list" (ing_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION)
+                recipe VARCHAR(255))
 		""",
-        """
-            CREATE TABLE "orders" (
-                order_id SERIAL PRIMARY KEY,
-                product_id INTEGER,
-                user_id INTEGER,
-                pizzeria_id INTEGER,
-                total_price VARCHAR(255),
-                order_status VARCHAR(255),
-                CONSTRAINT pizzeria_id FOREIGN KEY (order_id)
-                    REFERENCES "pizzeria" (pizzeria_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION,
-                CONSTRAINT user_id FOREIGN KEY (order_id)
-                    REFERENCES "user" (user_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION,
-                CONSTRAINT product_id FOREIGN KEY (order_id)
-                    REFERENCES "pizzeria_catalog" (product_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION)
-		""",
-            """ CREATE TABLE "admin" (
-                adm_id SERIAL PRIMARY KEY,
-                name VARCHAR(255),
-                password VARCHAR(255),
-                email VARCHAR(255),
-                pizzeria_id INTEGER,
-                ing_id INTEGER,
-                order_id INTEGER,
-                CONSTRAINT ing_id FOREIGN KEY (adm_id)
-					REFERENCES "ingredients_list" (ing_id)
-					ON UPDATE NO ACTION ON DELETE NO ACTION,
-                CONSTRAINT order_id FOREIGN KEY (adm_id)
-					REFERENCES "orders" (order_id)
-					ON UPDATE NO ACTION ON DELETE NO ACTION,
-                CONSTRAINT pizzeria_id FOREIGN KEY (adm_id)
-					REFERENCES "pizzeria" (pizzeria_id)
-					ON UPDATE NO ACTION ON DELETE NO ACTION)
-		""",
-        """
+          """
             CREATE TABLE "pizzeria_emp" (
                 pi_emp_id SERIAL PRIMARY KEY,
                 name VARCHAR(255),
                 password VARCHAR(255),
                 email VARCHAR(255),
-                pizzeria_id INTEGER,
-                ing_id INTEGER,
-                order_id INTEGER,
-                CONSTRAINT ing_id FOREIGN KEY (pi_emp_id)
-                    REFERENCES "ingredients_list" (ing_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION,
-                CONSTRAINT order_id FOREIGN KEY (pi_emp_id)
-                    REFERENCES "orders" (order_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION,
-                CONSTRAINT pizzeria_id FOREIGN KEY (pi_emp_id)
-                    REFERENCES "pizzeria" (pizzeria_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION)
+                pizzeria_id INTEGER REFERENCES "pizzeria" (pizzeria_id) ON DELETE CASCADE)
 		""",
         """
-            CREATE TABLE "delivery" (
-                order_del_id SERIAL PRIMARY KEY,
-                order_id INTEGER,
-                address_id INTEGER,
-                delivery_status VARCHAR(255),
-                CONSTRAINT address_id FOREIGN KEY (order_del_id)
-                    REFERENCES "address" (address_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION,
-                CONSTRAINT order_id FOREIGN KEY (order_del_id)
-                    REFERENCES "orders" (order_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION)
+            CREATE TABLE "order" (
+                order_id SERIAL PRIMARY KEY,
+                created_at DATE NOT NULL DEFAULT CURRENT_DATE,
+                user_id INTEGER REFERENCES "user" (user_id) ON DELETE CASCADE,
+                pi_emp_id INTEGER REFERENCES "pizzeria_emp" (pi_emp_id) ON DELETE CASCADE,
+                pizzeria_id INTEGER REFERENCES "pizzeria" (pizzeria_id) ON DELETE CASCADE,
+                total_price VARCHAR(255),
+                order_status VARCHAR(255))
 		""",
         """
             CREATE TABLE "delivery_emp" (
@@ -128,22 +67,34 @@ def create_tables():
                 name VARCHAR(255),
                 password VARCHAR(255),
                 email VARCHAR(255),
-                order_del_id INTEGER,
-                delivery_status VARCHAR(255),
-                CONSTRAINT order_del_id FOREIGN KEY (order_del_id)
-                    REFERENCES "delivery" (order_del_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION)
+                order_id INTEGER REFERENCES "order" (order_id) ON DELETE CASCADE,
+                address_id INTEGER REFERENCES "address" (address_id) ON DELETE CASCADE,
+                availability VARCHAR(255))
 		""",
         """
-            CREATE TABLE "recipe" (
-                rec_id SERIAL PRIMARY KEY,
-                name VARCHAR(255),
-                description VARCHAR(255),
-                pizzeria_id INTEGER,
-                CONSTRAINT pizzeria_id FOREIGN KEY (rec_id)
-                    REFERENCES "pizzeria" (pizzeria_id)
-                    ON UPDATE NO ACTION ON DELETE NO ACTION)
-		""")
+            CREATE TABLE "order_details" (
+                order_det_id SERIAL PRIMARY KEY,
+                order_id INTEGER REFERENCES "order" (order_id) ON DELETE CASCADE,
+                product_id INTEGER REFERENCES "pizzeria_catalog" (product_id) ON DELETE CASCADE,
+                quantity VARCHAR(255),
+                price VARCHAR(255))
+        """,
+        """
+            CREATE TABLE "requires_ingredients" (
+                product_id INTEGER REFERENCES "pizzeria_catalog" (product_id) ON DELETE CASCADE,
+                ing_id INTEGER REFERENCES "ingredients_list" (ing_id) ON DELETE CASCADE,
+                quantity VARCHAR(255),
+                ing_unity VARCHAR(255),
+                PRIMARY KEY (product_id, ing_id))
+        """,
+        """
+            CREATE TABLE "has_ingredients" (
+                pizzeria_id INTEGER REFERENCES "pizzeria" (pizzeria_id) ON DELETE CASCADE,
+                ing_id INTEGER REFERENCES "ingredients_list" (ing_id) ON DELETE CASCADE,
+                quantity VARCHAR(255),
+                PRIMARY KEY (pizzeria_id, ing_id))
+        """
+        )
     conn = None
     try:
         DB_HOST = config('DB_HOST')

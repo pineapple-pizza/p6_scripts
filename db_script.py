@@ -7,7 +7,7 @@ DB_PASSWORD = config('DB_PASSWORD')
 DB_NAME = config('DB_NAME')
 
 conn = connect(
-    dbname=DB_NAME,
+    database="postgres",
     user=DB_USER,
     host=DB_HOST,
     password=DB_PASSWORD
@@ -15,7 +15,7 @@ conn = connect(
 
 # object type: psycopg2.extensions.connection
 # string for the new database name to be created
-DB_NAME = "project_6_new"
+DB_NAME = "p6_db"
 
 # get the isolation leve for autocommit
 autocommit = extensions.ISOLATION_LEVEL_AUTOCOMMIT
